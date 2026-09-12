@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SBGI Attendance Intelligence</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
+
+        body {
+         background: #f5f6fa;
+         color: #1c1d29;
+         min-height: 100vh;
+         overflow-x: hidden;
+         }
+
+
+        .glow { position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.12; z-index: 0; pointer-events: none; }
+        .glow-1 { width: 500px; height: 500px; background: #6366f1; top: -150px; left: -100px; }
+        .glow-2 { width: 400px; height: 400px; background: #d4af37; bottom: -100px; right: -100px; }
+
+        .layout { display: flex; position: relative; z-index: 1; }
+
+        .sidebar {
+            width: 240px; height: 100vh; position: fixed; padding: 26px 18px;
+            background: rgba(255,255,255,0.96); border-right: 1px solid rgba(0,0,0,0.06);
+            backdrop-filter: blur(20px);
+        }
+        .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .brand-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 15px; color: white;
+        }
+        .brand-name { font-size: 15px; font-weight: 700; color: #1c1d29; }
+        .brand-sub { font-size: 10.5px; color: #6b6e80; margin: 10px 0 28px 0; line-height: 1.5; }
+
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; margin-bottom: 4px; font-size: 13.5px; color: #6b6e80; text-decoration: none; cursor: pointer; transition: all 0.2s; }
+        .nav-item:hover { background: rgba(99,102,241,0.06); color: #1c1d29; }
+        .nav-item.active { background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08)); color: #1a2f66; font-weight: 600; box-shadow: inset 0 0 0 1px rgba(99,102,241,0.25); }
+
+        .accred-badge { margin-top: 28px; padding: 12px; text-align: center; background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); border-radius: 10px; font-size: 10.5px; color: #a5750f; }
+
+        .main { margin-left: 240px; padding: 28px 34px; width: 100%; }
+
+        .topbar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; }
+        .topbar h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: #1c1d29; }
+        .live-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #6b6e80; margin-top: 6px; }
+        .live-dot { width: 7px; height: 7px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+        .dept-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+        .chip { padding: 7px 16px; border-radius: 20px; font-size: 12px; cursor: pointer; background: white; border: 1px solid rgba(0,0,0,0.08); color: #6b6e80; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+        .chip:hover { background: rgba(99,102,241,0.08); color: #1a2f66; }
+        .chip.active { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border-color: transparent; font-weight: 600; }
+
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 22px; }
+        .stat-card { background: rgba(255,255,255,0.96); border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 20px; backdrop-filter: blur(10px); box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .stat-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+        .stat-icon.total { background: rgba(99,102,241,0.12); }
+        .stat-icon.today { background: rgba(34,197,94,0.12); }
+        .stat-icon.unique { background: rgba(212,175,55,0.15); }
+        .stat-card .num { font-size: 28px; font-weight: 700; color: #1c1d29; }
+        .stat-card .label { font-size: 12.5px; color: #6b6e80; margin-top: 2px; }
+
+        .content-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; margin-bottom: 18px; }
+
+        .panel { background: rgba(255,255,255,0.96); border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 20px; backdrop-filter: blur(10px); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .panel-head h3 { font-size: 14.5px; font-weight: 600; color: #1c1d29; }
+        .panel-head span { font-size: 11px; color: #6b6e80; }
+
+        .toolbar { display: flex; gap: 10px; margin-bottom: 14px; }
+        .toolbar input { flex: 1; padding: 9px 14px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); background: #f7f8fb; color: #1c1d29; font-size: 12.5px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 11px 12px; text-align: left; font-size: 12.5px; }
+        th { color: #6b6e80; text-transform: uppercase; font-size: 10px; letter-spacing: 0.6px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+        td { border-bottom: 1px solid rgba(0,0,0,0.04); color: #1c1d29; }
+        tr:hover td { background: rgba(99,102,241,0.03); }
+        .name-cell { font-weight: 600; text-transform: capitalize; }
+        .dept-tag { background: rgba(99,102,241,0.1); color: #4338ca; padding: 3px 10px; border-radius: 10px; font-size: 10.5px; font-weight: 600; }
+        .section-tag { background: rgba(212,175,55,0.15); color: #a5750f; padding: 3px 10px; border-radius: 10px; font-size: 10.5px; font-weight: 600; }
+
+        .leader-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .leader-rank { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: rgba(0,0,0,0.05); color: #1c1d29; }
+        .leader-rank.gold { background: linear-gradient(135deg, #d4af37, #f5d576); color: #1a1a1a; }
+        .leader-rank.silver { background: linear-gradient(135deg, #b0b0b0, #e0e0e0); color: #1a1a1a; }
+        .leader-rank.bronze { background: linear-gradient(135deg, #cd7f32, #e0a970); color: #1a1a1a; }
+        .leader-info { flex: 1; }
+        .leader-name { font-size: 13px; font-weight: 600; text-transform: capitalize; color: #1c1d29; }
+        .leader-pct { font-size: 11px; color: #6b6e80; }
+        .leader-bar-bg { width: 100%; height: 4px; background: rgba(0,0,0,0.06); border-radius: 4px; margin-top: 4px; overflow: hidden; }
+        .leader-bar-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+
+        .notif-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05); animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px);} to { opacity: 1; transform: translateY(0);} }
+        .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-top: 5px; flex-shrink: 0; }
+        .notif-text { font-size: 12.5px; color: #1c1d29; }
+        .notif-text b { font-weight: 600; }
+        .notif-time { font-size: 10.5px; color: #6b6e80; }
+
+        .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        canvas { max-height: 220px; }
+        .banner {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+    .banner img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+}
+   .banner-text h2 {
+    font-size: 20px;
+    color: #1c1d29;
+    margin-bottom: 4px;
+}
+   .banner-text p {
+    font-size: 12.5px;
+    color: #6b6e80;
+}
+    </style>
+</head>
+<body>
+
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+
+    <div class="layout">
+        <div class="sidebar">
+            <div class="brand">
+               <img src="/static/sbgi_logo.png" style="width:44px; height:44px; object-fit:contain;">   
+                <div class="brand-name">SBGI, Miraj</div>
+            </div>
+            <div class="brand-sub">Sanjay Bhokare Group of Institutes<br>Affiliated to DBATU, Lonere</div>
+
+            <a href="/" class="nav-item active">📋 Dashboard</a>
+            <a href="/departments" class="nav-item">🏛️ Departments</a>
+            <a href="/students" class="nav-item">👥 Students</a>
+            <a href="/leaderboard" class="nav-item">🏆 Leaderboard</a>
+
+            <div class="accred-badge">NAAC 'A' Grade<br>AICTE Approved</div>
+        </div>
+
+        <div class="main">
+            <div class="banner">
+            <img src="/static/sbgi_logo.png">
+            <div class="banner-text">
+               <h2>Sanjay Bhokare Group of Institutes, Miraj</h2>
+               <p>Affiliated to Dr. Babasaheb Ambedkar Technological University (DBATU), Lonere · NAAC 'A' Grade · AICTE Approved</p>
+             </div>
+         </div>
+
+         <div class="topbar">
+         <div>
+             <h1>Attendance Intelligence</h1>
+              <div class="live-badge"><span class="live-dot"></span>Live · AI + IoT Face Recognition System</div>
+                </div>
+              </div>
+
+             <div class="dept-chips" id="deptChips">
+                <div class="chip active" data-dept="">All Departments</div>
+                {% for dept in departments %}
+                <div class="chip {% if selected_department == dept %}active{% endif %}" data-dept="{{ dept }}">{{ dept }}</div>
+                {% endfor %}
+             </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-top"><div class="stat-icon total">📊</div></div>
+                    <div class="num" id="totalCount">0</div>
+                    <div class="label">Total Records</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-top"><div class="stat-icon today">✅</div></div>
+                    <div class="num" id="todayCount">0</div>
+                    <div class="label">Marked Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-top"><div class="stat-icon unique">👥</div></div>
+                    <div class="num" id="uniqueCount">0</div>
+                    <div class="label">Unique Students</div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="panel">
+                    <div class="panel-head"><h3>Attendance Records</h3></div>
+                    <div class="toolbar">
+                        <input type="text" id="searchBox" placeholder="Search by name..." onkeyup="filterTable()">
+                    </div>
+                    <table id="attendanceTable">
+                        <thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Sec</th><th>Date</th><th>Time</th></tr></thead>
+                        <tbody id="tableBody">
+                        {% for record in records %}
+                        <tr>
+                            <td>{{ record[0] }}</td>
+                            <td class="name-cell">{{ record[1] }}</td>
+                            <td><span class="dept-tag">{{ record[4] }}</span></td>
+                            <td><span class="section-tag">{{ record[5] }}</span></td>
+                            <td>{{ record[2] }}</td>
+                            <td>{{ record[3] }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div>
+                    <div class="panel" style="margin-bottom: 18px;">
+                        <div class="panel-head"><h3>🏆 Attendance Leaderboard</h3><span>this month</span></div>
+                        <div id="leaderList"></div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-head"><h3>Recent Activity</h3></div>
+                        <div id="notifFeed"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-grid">
+                <div class="panel">
+                    <div class="panel-head"><h3>Department-wise Attendance</h3></div>
+                    <canvas id="deptChart"></canvas>
+                </div>
+                <div class="panel">
+                    <div class="panel-head"><h3>Attendance % (Week / Month)</h3></div>
+                    <div id="pctList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDept = "{{ selected_department }}";
+
+        document.querySelectorAll(".chip").forEach(chip => {
+            chip.addEventListener("click", () => {
+                document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+                chip.classList.add("active");
+                currentDept = chip.dataset.dept;
+                refreshData(true);
+            });
+        });
+
+        function animateCount(el, target) {
+            const start = parseInt(el.textContent) || 0;
+            const duration = 600;
+            const startTime = performance.now();
+            function step(now) {
+                const progress = Math.min((now - startTime) / duration, 1);
+                el.textContent = Math.floor(start + (target - start) * progress);
+                if (progress < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+
+        function filterTable() {
+            const input = document.getElementById("searchBox").value.toLowerCase();
+            document.querySelectorAll("#tableBody tr").forEach(row => {
+                row.style.display = row.cells[1].textContent.toLowerCase().includes(input) ? "" : "none";
+            });
+        }
+
+        const ctx = document.getElementById('deptChart').getContext('2d');
+        let chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels: [], datasets: [{ data: [], backgroundColor: ['#6366f1','#8b5cf6','#d4af37','#22c55e','#ef4444','#06b6d4','#f97316','#ec4899'] }] },
+            options: { plugins: { legend: { position: 'bottom', labels: { color: '#1c1d29', font: { size: 10 } } } } }
+        });
+
+        let lastTopId = null;
+
+        function renderLeaderboard(pctData) {
+            const sorted = [...pctData].sort((a,b) => b.month_pct - a.month_pct).slice(0, 5);
+            const list = document.getElementById("leaderList");
+            list.innerHTML = "";
+            const medals = ["gold","silver","bronze"];
+            sorted.forEach((s, i) => {
+                const div = document.createElement("div");
+                div.className = "leader-item";
+                const rankClass = medals[i] || "";
+                div.innerHTML = `<div class="leader-rank ${rankClass}">${i+1}</div>
+                    <div class="leader-info">
+                        <div class="leader-name">${s.name}</div>
+                        <div class="leader-bar-bg"><div class="leader-bar-fill" style="width:${s.month_pct}%;"></div></div>
+                    </div>
+                    <div class="leader-pct">${s.month_pct}%</div>`;
+                list.appendChild(div);
+            });
+        }
+
+        function renderPctList(pctData) {
+            const pctList = document.getElementById("pctList");
+            pctList.innerHTML = "";
+            pctData.forEach(s => {
+                const div = document.createElement("div");
+                div.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(0,0,0,0.05);font-size:12.5px;color:#1c1d29;";
+                div.innerHTML = `<div style="text-transform:capitalize;">${s.name}</div>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                    <div style="width:90px;height:6px;background:rgba(0,0,0,0.06);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${s.week_pct}%;background:linear-gradient(90deg,#6366f1,#8b5cf6);"></div></div>
+                    <div>${s.week_pct}% / ${s.month_pct}%</div></div>`;
+                pctList.appendChild(div);
+            });
+        }
+
+        function addNotification(name, time) {
+            const feed = document.getElementById("notifFeed");
+            const div = document.createElement("div");
+            div.className = "notif-item";
+            div.innerHTML = `<div class="notif-dot"></div><div><div class="notif-text"><b>${name}</b> marked attendance</div><div class="notif-time">${time}</div></div>`;
+            feed.prepend(div);
+            while (feed.children.length > 6) feed.removeChild(feed.lastChild);
+        }
+
+        async function refreshData(isFilterChange = false) {
+            try {
+                const res = await fetch(`/api/data?department=${encodeURIComponent(currentDept)}`);
+                const data = await res.json();
+
+                animateCount(document.getElementById("totalCount"), data.total_count);
+                animateCount(document.getElementById("todayCount"), data.today_count);
+                animateCount(document.getElementById("uniqueCount"), data.unique_students);
+
+                const tbody = document.getElementById("tableBody");
+                tbody.innerHTML = "";
+                data.records.forEach(r => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `<td>${r[0]}</td><td class="name-cell">${r[1]}</td>
+                        <td><span class="dept-tag">${r[4]||''}</span></td>
+                        <td><span class="section-tag">${r[5]||''}</span></td>
+                        <td>${r[2]}</td><td>${r[3]}</td>`;
+                    tbody.appendChild(row);
+                });
+
+                if (!isFilterChange && data.records.length > 0) {
+                    const top = data.records[0];
+                    if (lastTopId !== null && top[0] !== lastTopId) addNotification(top[1], top[3]);
+                    lastTopId = top[0];
+                } else if (data.records.length > 0) {
+                    lastTopId = data.records[0][0];
+                }
+
+                chart.data.labels = data.dept_labels;
+                chart.data.datasets[0].data = data.dept_counts;
+                chart.update();
+
+                renderLeaderboard(data.attendance_pct);
+                renderPctList(data.attendance_pct);
+                filterTable();
+            } catch (e) { console.error(e); }
+        }
+
+        setInterval(() => refreshData(false), 5000);
+        refreshData(true);
+    </script>
+
+</body>
+</html>
