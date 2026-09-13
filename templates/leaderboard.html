@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Leaderboard - SBGI</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Inter','Segoe UI',Arial,sans-serif; }
+body { background:#0a0b14; color:#e8e9f3; min-height:100vh; }
+.main { padding:34px; max-width:700px; margin:0 auto; }
+.back { color:#a5b4fc; text-decoration:none; font-size:13px; }
+h1 { font-size:26px; margin:14px 0 20px 0; }
+.panel { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:16px; padding:20px; }
+.leader-item { display:flex; align-items:center; gap:14px; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+.leader-rank { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; background:rgba(255,255,255,0.06); }
+.leader-rank.gold { background:linear-gradient(135deg,#d4af37,#f5d576); color:#1a1a1a; }
+.leader-rank.silver { background:linear-gradient(135deg,#b0b0b0,#e0e0e0); color:#1a1a1a; }
+.leader-rank.bronze { background:linear-gradient(135deg,#cd7f32,#e0a970); color:#1a1a1a; }
+.leader-info { flex:1; }
+.leader-name { font-size:14px; font-weight:600; text-transform:capitalize; }
+.leader-bar-bg { width:100%; height:5px; background:rgba(255,255,255,0.06); border-radius:4px; margin-top:5px; overflow:hidden; }
+.leader-bar-fill { height:100%; background:linear-gradient(90deg,#6366f1,#8b5cf6); }
+.leader-pct { font-size:13px; font-weight:700; color:#a5b4fc; }
+</style>
+</head>
+<body>
+<div class="main">
+    <a href="/" class="back">← Back to Dashboard</a>
+    <h1>🏆 Attendance Leaderboard</h1>
+    <div class="panel">
+        {% for s in attendance_pct %}
+        <div class="leader-item">
+            <div class="leader-rank {% if loop.index==1 %}gold{% elif loop.index==2 %}silver{% elif loop.index==3 %}bronze{% endif %}">{{ loop.index }}</div>
+            <div class="leader-info">
+                <div class="leader-name">{{ s.name }}</div>
+                <div class="leader-bar-bg"><div class="leader-bar-fill" style="width:{{ s.month_pct }}%;"></div></div>
+            </div>
+            <div class="leader-pct">{{ s.month_pct }}%</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</body>
+</html>
