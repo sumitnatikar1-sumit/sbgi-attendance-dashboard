@@ -20,7 +20,9 @@ h1 { font-size:24px; font-weight:700; margin-bottom:22px; }
 .dept-block { margin-bottom:22px; }
 .dept-title { font-size:15px; font-weight:700; color:#1a2f66; margin-bottom:12px; }
 .faculty-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
-.faculty-photo { width:70px; height:70px; border-radius:50%; object-fit:cover; margin-bottom:10px; border:2px solid rgba(99,102,241,0.15); }
+.faculty-card { background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:16px; padding:18px; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+.faculty-photo { width:70px; height:70px; border-radius:50%; object-fit:cover; margin-bottom:10px; border:2px solid rgba(99,102,241,0.15); display:block; }
+.faculty-name { font-size:14.5px; font-weight:700; color:#1c1d29; margin-bottom:4px; }
 .designation-tag { display:inline-block; background:rgba(212,175,55,0.15); color:#a5750f; padding:3px 10px; border-radius:10px; font-size:10.5px; font-weight:600; margin-bottom:10px; }
 .faculty-row { font-size:12px; color:#6b6e80; margin-bottom:4px; }
 .faculty-row b { color:#1c1d29; font-weight:600; }
@@ -48,9 +50,6 @@ h1 { font-size:24px; font-weight:700; margin-bottom:22px; }
                 <div class="faculty-card">
                     <img class="faculty-photo" src="/static/{{ f.photo }}">
                     <div class="faculty-name">{{ f.name }}</div>
-                    {% if f.photo %}
-                        <img src="{{ f.photo }}" alt="{{ f.name }}" class="faculty-photo">
-                    {% endif %}
                     <span class="designation-tag">{{ f.designation }}</span>
                     <div class="faculty-row"><b>Subject:</b> {{ f.subject }}</div>
                     <div class="faculty-row"><b>Qualification:</b> {{ f.qualification }}</div>
