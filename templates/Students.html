@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Students - SBGI</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Inter','Segoe UI',Arial,sans-serif; }
+body { background:#0a0b14; color:#e8e9f3; min-height:100vh; }
+.glow { position:fixed; border-radius:50%; filter:blur(120px); opacity:0.25; z-index:0; background:#6366f1; width:500px; height:500px; top:-150px; left:-100px; }
+.layout { display:flex; position:relative; z-index:1; }
+.sidebar { width:240px; height:100vh; position:fixed; padding:26px 18px; background:rgba(255,255,255,0.03); border-right:1px solid rgba(255,255,255,0.06); backdrop-filter:blur(20px); }
+.brand { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.brand-icon { width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#6366f1,#8b5cf6); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; }
+.brand-name { font-size:15px; font-weight:700; }
+.brand-sub { font-size:10.5px; color:#7a7d99; margin:10px 0 28px 0; line-height:1.5; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; margin-bottom:4px; font-size:13.5px; color:#9497b5; text-decoration:none; }
+.nav-item:hover { background:rgba(255,255,255,0.04); color:#e8e9f3; }
+.nav-item.active { background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.1)); color:#fff; font-weight:600; box-shadow:inset 0 0 0 1px rgba(99,102,241,0.3); }
+.accred-badge { margin-top:28px; padding:12px; text-align:center; background:rgba(212,175,55,0.1); border:1px solid rgba(212,175,55,0.3); border-radius:10px; font-size:10.5px; color:#d4af37; }
+.main { margin-left:240px; padding:28px 34px; width:100%; }
+h1 { font-size:24px; font-weight:700; margin-bottom:22px; }
+.panel { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:16px; padding:20px; }
+table { width:100%; border-collapse:collapse; }
+th, td { padding:13px 14px; text-align:left; font-size:13px; }
+th { color:#7a7d99; text-transform:uppercase; font-size:10px; letter-spacing:.6px; border-bottom:1px solid rgba(255,255,255,0.06); }
+td { border-bottom:1px solid rgba(255,255,255,0.04); }
+tr:hover td { background:rgba(255,255,255,0.02); }
+a.student-link { color:#a5b4fc; text-decoration:none; font-weight:600; text-transform:capitalize; }
+.dept-tag { background:rgba(99,102,241,0.15); color:#a5b4fc; padding:3px 10px; border-radius:10px; font-size:10.5px; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="layout">
+    <div class="sidebar">
+        <div class="brand"><div class="brand-icon">S</div><div class="brand-name">SBGI, Miraj</div></div>
+        <div class="brand-sub">Sanjay Bhokare Group of Institutes<br>Affiliated to DBATU, Lonere</div>
+        <a href="/" class="nav-item">📋 Dashboard</a>
+        <a href="/departments" class="nav-item">🏛️ Departments</a>
+        <a href="/students" class="nav-item active">👥 Students</a>
+        <a href="/leaderboard" class="nav-item">🏆 Leaderboard</a>
+        <div class="accred-badge">NAAC 'A' Grade<br>AICTE Approved</div>
+    </div>
+    <div class="main">
+        <h1>Students</h1>
+        <div class="panel">
+            <table>
+                <tr><th>Name</th><th>Department</th><th>Section</th><th>Total Attendance</th><th>Last Seen</th></tr>
+                {% for s in students %}
+                <tr>
+                    <td><a class="student-link" href="/students/{{ s[0] }}">{{ s[0] }}</a></td>
+                    <td><span class="dept-tag">{{ s[1] }}</span></td>
+                    <td>{{ s[2] }}</td>
+                    <td>{{ s[3] }}</td>
+                    <td>{{ s[4] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
