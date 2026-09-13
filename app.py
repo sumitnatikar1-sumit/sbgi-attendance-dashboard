@@ -10,6 +10,49 @@ DEPARTMENTS = [
     "Computer Science & Engineering (AIML)", "Electronics & Computer Science",
     "General Science"
 ]
+FACULTY = [
+    {
+        "name": "Mrs. Shubhangi Rahul Patil",
+        "department": "Electronics & Computer Science",
+        "subject": "Computer Networks (CN)",
+        "designation": "Assistant Professor",
+        "qualification": "B.Tech",
+        "experience": "2 Years",
+        "email": "patilsr@sbgimiraj.org",
+        "photo": "shubhangi_patil.jpg"
+    },
+    {
+        "name": "Prof. Abidali G Surati",
+        "department": "Electronics & Computer Science",
+        "subject": "Signals & Systems",
+        "designation": "Assistant Professor",
+        "qualification": "B.E. (Electronics), M.E. (E&TC)",
+        "experience": "7 years teaching + 2 years industrial",
+        "email": "agsurati@sbgimiraj.org",
+        "photo": "abidali_surati.jpg"
+    },
+    {
+        "name": "Mr. Siddharth D Dhende",
+        "department": "Electronics & Computer Science",
+        "subject": "Database Management Systems",
+        "designation": "Assistant Professor",
+        "qualification": "D.C.O., B.Tech, M.Tech (CSE)",
+        "experience": "1 Year",
+        "email": "dhendesd@sbgimiraj.org",
+        "photo": "siddharth_dhende.jpg"
+    },
+    {
+        "name": "Mr. Nishat Hanamant Patil",
+        "department": "Electronics & Computer Science",
+        "subject": "Computer Hardware & Networking (Lab)",
+        "designation": "Lab Assistant",
+        "qualification": "B.Tech (Electronics), Diploma (E&TC)",
+        "experience": "10 Years",
+        "email": "nishant.patil05@gmail.com",
+        "photo": "nishat_patil.jpg"
+    },
+    # बाकी faculty नंतर इथेच add करता येतील
+]
 
 
 def get_dashboard_data(selected_department=""):
@@ -126,7 +169,6 @@ def leaderboard_page():
     sorted_pct = sorted(data["attendance_pct"], key=lambda x: x["month_pct"], reverse=True)
     return render_template("leaderboard.html", attendance_pct=sorted_pct)
 
+
 if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)
