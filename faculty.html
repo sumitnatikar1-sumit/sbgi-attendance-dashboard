@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Faculty - SBGI</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Inter','Segoe UI',Arial,sans-serif; }
+body { background:#f5f6fa; color:#1c1d29; min-height:100vh; }
+.layout { display:flex; }
+.sidebar { width:240px; height:100vh; position:fixed; padding:26px 18px; background:rgba(255,255,255,0.96); border-right:1px solid rgba(0,0,0,0.06); }
+.brand { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.brand-icon { width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#6366f1,#8b5cf6); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; color:white; }
+.brand-name { font-size:15px; font-weight:700; }
+.brand-sub { font-size:10.5px; color:#6b6e80; margin:10px 0 28px 0; line-height:1.5; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; margin-bottom:4px; font-size:13.5px; color:#6b6e80; text-decoration:none; }
+.nav-item:hover { background:rgba(99,102,241,0.06); color:#1c1d29; }
+.nav-item.active { background:linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.08)); color:#1a2f66; font-weight:600; box-shadow:inset 0 0 0 1px rgba(99,102,241,0.25); }
+.accred-badge { margin-top:28px; padding:12px; text-align:center; background:rgba(212,175,55,0.1); border:1px solid rgba(212,175,55,0.3); border-radius:10px; font-size:10.5px; color:#a5750f; }
+.main { margin-left:240px; padding:28px 34px; width:100%; }
+h1 { font-size:24px; font-weight:700; margin-bottom:22px; }
+.dept-block { margin-bottom:22px; }
+.dept-title { font-size:15px; font-weight:700; color:#1a2f66; margin-bottom:12px; }
+.faculty-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
+.faculty-photo { width:70px; height:70px; border-radius:50%; object-fit:cover; margin-bottom:10px; border:2px solid rgba(99,102,241,0.15); }
+.designation-tag { display:inline-block; background:rgba(212,175,55,0.15); color:#a5750f; padding:3px 10px; border-radius:10px; font-size:10.5px; font-weight:600; margin-bottom:10px; }
+.faculty-row { font-size:12px; color:#6b6e80; margin-bottom:4px; }
+.faculty-row b { color:#1c1d29; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="layout">
+    <div class="sidebar">
+        <div class="brand"><div class="brand-icon">S</div><div class="brand-name">SBGI, Miraj</div></div>
+        <div class="brand-sub">Sanjay Bhokare Group of Institutes<br>Affiliated to DBATU, Lonere</div>
+        <a href="/" class="nav-item">📋 Dashboard</a>
+        <a href="/departments" class="nav-item">🏛️ Departments</a>
+        <a href="/students" class="nav-item">👥 Students</a>
+        <a href="/faculty" class="nav-item active">🎓 Faculty</a>
+        <a href="/leaderboard" class="nav-item">🏆 Leaderboard</a>
+        <div class="accred-badge">NAAC 'A' Grade<br>AICTE Approved</div>
+    </div>
+    <div class="main">
+        <h1>Faculty Directory</h1>
+        {% for dept, members in grouped.items() %}
+        <div class="dept-block">
+            <div class="dept-title">{{ dept }}</div>
+            <div class="faculty-grid">
+                {% for f in members %}
+                <div class="faculty-card">
+                    <img class="faculty-photo" src="/static/{{ f.photo }}">
+                    <div class="faculty-name">{{ f.name }}</div>
+                    {% if f.photo %}
+                        <img src="{{ f.photo }}" alt="{{ f.name }}" class="faculty-photo">
+                    {% endif %}
+                    <span class="designation-tag">{{ f.designation }}</span>
+                    <div class="faculty-row"><b>Subject:</b> {{ f.subject }}</div>
+                    <div class="faculty-row"><b>Qualification:</b> {{ f.qualification }}</div>
+                    <div class="faculty-row"><b>Experience:</b> {{ f.experience }}</div>
+                    <div class="faculty-row"><b>Email:</b> {{ f.email }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</body>
+</html>
