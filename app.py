@@ -169,6 +169,13 @@ def leaderboard_page():
     sorted_pct = sorted(data["attendance_pct"], key=lambda x: x["month_pct"], reverse=True)
     return render_template("leaderboard.html", attendance_pct=sorted_pct)
 
+@app.route("/faculty")
+def faculty_page():
+    grouped = {}
+    for f in FACULTY:
+        grouped.setdefault(f["department"], []).append(f)
+    return render_template("faculty.html", grouped=grouped)
+
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
