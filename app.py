@@ -1,8 +1,14 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response, session, redirect, url_for
 import sqlite3
+import csv
+import io
 from datetime import date, timedelta
 
 app = Flask(__name__)
+app.secret_key = "sbgi-attendance-secret-key-2026"
+
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "sbgi2026"
 
 DEPARTMENTS = [
     "Civil Engineering", "Computer Engineering", "Electrical Engineering",
@@ -10,6 +16,7 @@ DEPARTMENTS = [
     "Computer Science & Engineering (AIML)", "Electronics & Computer Science",
     "General Science"
 ]
+
 FACULTY = [
     {
         "name": "Mrs. Shubhangi Rahul Patil",
@@ -51,18 +58,28 @@ FACULTY = [
         "email": "nishant.patil05@gmail.com",
         "photo": "nishat_patil.jpg"
     },
-    # बाकी faculty नंतर इथेच add करता येतील
 ]
 
 
-def get_dashboard_data(selected_department=""):
+def get_dashboard_data(selected_department="", start_date="", end_date=""):
     conn = sqlite3.connect("attendance.db")
     cursor = conn.cursor()
 
+    query = "SELECT * FROM attendance WHERE 1=1"
+    params = []
+
     if selected_department:
-        cursor.execute("SELECT * FROM attendance WHERE department = ? ORDER BY id DESC", (selected_department,))
-    else:
-        cursor.execute("SELECT * FROM attendance ORDER BY id DESC")
+        query += " AND department = ?"
+        params.append(selected_department)
+    if start_date:
+        query += " AND date >= ?"
+        params.append(start_date)
+    if end_date:
+        query += " AND date <= ?"
+        params.append(end_date)
+
+    query += " ORDER BY id DESC"
+    cursor.execute(query, params)
     records = cursor.fetchall()
 
     cursor.execute("SELECT COUNT(*) FROM attendance")
@@ -98,7 +115,7 @@ def get_dashboard_data(selected_department=""):
         month_days = cursor.fetchone()[0]
         month_pct = round((month_days / days_elapsed_month) * 100) if days_elapsed_month else 0
 
-        attendance_pct.append({"name": student, "week_pct": week_pct, "month_pct": month_pct})
+        attendance_pct.append({"name": student, "week_pct": week_pct, "month_pct": month_pct, "low": month_pct < 75})
 
     conn.close()
 
@@ -112,15 +129,44 @@ def get_dashboard_data(selected_department=""):
 @app.route("/")
 def dashboard():
     selected_department = request.args.get("department", "")
-    data = get_dashboard_data(selected_department)
-    return render_template("dashboard.html", departments=DEPARTMENTS, selected_department=selected_department, **data)
+    start_date = request.args.get("start_date", "")
+    end_date = request.args.get("end_date", "")
+    data = get_dashboard_data(selected_department, start_date, end_date)
+    return render_template(
+        "dashboard.html", departments=DEPARTMENTS,
+        selected_department=selected_department,
+        start_date=start_date, end_date=end_date,
+        is_admin=session.get("is_admin", False), **data
+    )
 
 
 @app.route("/api/data")
 def api_data():
     selected_department = request.args.get("department", "")
-    data = get_dashboard_data(selected_department)
+    start_date = request.args.get("start_date", "")
+    end_date = request.args.get("end_date", "")
+    data = get_dashboard_data(selected_department, start_date, end_date)
     return jsonify(data)
+
+
+@app.route("/export/csv")
+def export_csv():
+    selected_department = request.args.get("department", "")
+    start_date = request.args.get("start_date", "")
+    end_date = request.args.get("end_date", "")
+    data = get_dashboard_data(selected_department, start_date, end_date)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Name", "Department", "Section", "Date", "Time"])
+    for r in data["records"]:
+        writer.writerow(r)
+
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=attendance_export.csv"}
+    )
 
 
 @app.route("/departments")
@@ -169,12 +215,33 @@ def leaderboard_page():
     sorted_pct = sorted(data["attendance_pct"], key=lambda x: x["month_pct"], reverse=True)
     return render_template("leaderboard.html", attendance_pct=sorted_pct)
 
+
 @app.route("/faculty")
 def faculty_page():
     grouped = {}
     for f in FACULTY:
         grouped.setdefault(f["department"], []).append(f)
     return render_template("faculty.html", grouped=grouped)
+
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session["is_admin"] = True
+            return redirect(url_for("dashboard"))
+        error = "Invalid username or password"
+    return render_template("admin_login.html", error=error)
+
+
+@app.route("/admin/logout")
+def admin_logout():
+    session.pop("is_admin", None)
+    return redirect(url_for("dashboard"))
+
 
 if __name__ == "__main__":
     import os
