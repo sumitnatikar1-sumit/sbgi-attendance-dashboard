@@ -6,13 +6,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
 
-        body {
-         background: #f5f6fa;
-         color: #1c1d29;
-         min-height: 100vh;
-         overflow-x: hidden;
-         }
-
+        body { background: #f5f6fa; color: #1c1d29; min-height: 100vh; overflow-x: hidden; }
 
         .glow { position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.12; z-index: 0; pointer-events: none; }
         .glow-1 { width: 500px; height: 500px; background: #6366f1; top: -150px; left: -100px; }
@@ -72,8 +66,9 @@
         .panel-head h3 { font-size: 14.5px; font-weight: 600; color: #1c1d29; }
         .panel-head span { font-size: 11px; color: #6b6e80; }
 
-        .toolbar { display: flex; gap: 10px; margin-bottom: 14px; }
-        .toolbar input { flex: 1; padding: 9px 14px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); background: #f7f8fb; color: #1c1d29; font-size: 12.5px; }
+        .toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+        .toolbar input[type="text"] { flex: 1; min-width: 140px; padding: 9px 14px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); background: #f7f8fb; color: #1c1d29; font-size: 12.5px; }
+        .toolbar input[type="date"] { padding: 8px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); font-size: 12px; }
 
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 11px 12px; text-align: left; font-size: 12.5px; }
@@ -104,30 +99,13 @@
 
         .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
         canvas { max-height: 220px; }
-        .banner {
-    background: white;
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 22px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-    .banner img {
-    width: 100px;
-    height: 100px;
-    object-fit: contain;
-}
-   .banner-text h2 {
-    font-size: 20px;
-    color: #1c1d29;
-    margin-bottom: 4px;
-}
-   .banner-text p {
-    font-size: 12.5px;
-    color: #6b6e80;
-}
+        .banner { background: white; border-radius: 16px; padding: 24px; margin-bottom: 22px; display: flex; align-items: center; gap: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .banner img { width: 100px; height: 100px; object-fit: contain; }
+        .banner-text h2 { font-size: 20px; color: #1c1d29; margin-bottom: 4px; }
+        .banner-text p { font-size: 12.5px; color: #6b6e80; }
+
+        .filter-btn { padding: 8px 14px; border-radius: 8px; border: none; background: #6366f1; color: white; font-size: 12px; cursor: pointer; }
+        .export-btn { padding: 8px 14px; border-radius: 8px; background: #22c55e; color: white; font-size: 12px; text-decoration: none; display: flex; align-items: center; }
     </style>
 </head>
 <body>
@@ -138,7 +116,7 @@
     <div class="layout">
         <div class="sidebar">
             <div class="brand">
-               <img src="/static/sbgi_logo.png" style="width:44px; height:44px; object-fit:contain;">   
+               <img src="/static/sbgi_logo.png" style="width:44px; height:44px; object-fit:contain;">
                 <div class="brand-name">SBGI, Miraj</div>
             </div>
             <div class="brand-sub">Sanjay Bhokare Group of Institutes<br>Affiliated to DBATU, Lonere</div>
@@ -148,6 +126,11 @@
             <a href="/students" class="nav-item">👥 Students</a>
             <a href="/faculty" class="nav-item">🎓 Faculty</a>
             <a href="/leaderboard" class="nav-item">🏆 Leaderboard</a>
+            {% if is_admin %}
+            <a href="/admin/logout" class="nav-item">🔓 Logout (Admin)</a>
+            {% else %}
+            <a href="/admin/login" class="nav-item">🔐 Admin Login</a>
+            {% endif %}
 
             <div class="accred-badge">NAAC 'A' Grade<br>AICTE Approved</div>
         </div>
@@ -198,6 +181,13 @@
                     <div class="panel-head"><h3>Attendance Records</h3></div>
                     <div class="toolbar">
                         <input type="text" id="searchBox" placeholder="Search by name..." onkeyup="filterTable()">
+                        <form method="get" style="display:flex; gap:8px; margin:0;">
+                            <input type="hidden" name="department" value="{{ selected_department }}">
+                            <input type="date" name="start_date" value="{{ start_date }}">
+                            <input type="date" name="end_date" value="{{ end_date }}">
+                            <button type="submit" class="filter-btn">Filter</button>
+                        </form>
+                        <a href="/export/csv?department={{ selected_department }}&start_date={{ start_date }}&end_date={{ end_date }}" class="export-btn">⬇ Export</a>
                     </div>
                     <table id="attendanceTable">
                         <thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Sec</th><th>Date</th><th>Time</th></tr></thead>
@@ -244,6 +234,8 @@
 
     <script>
         let currentDept = "{{ selected_department }}";
+        let currentStart = "{{ start_date }}";
+        let currentEnd = "{{ end_date }}";
 
         document.querySelectorAll(".chip").forEach(chip => {
             chip.addEventListener("click", () => {
@@ -306,11 +298,13 @@
             pctList.innerHTML = "";
             pctData.forEach(s => {
                 const div = document.createElement("div");
-                div.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(0,0,0,0.05);font-size:12.5px;color:#1c1d29;";
-                div.innerHTML = `<div style="text-transform:capitalize;">${s.name}</div>
+                const color = s.low ? "#dc2626" : "#1c1d29";
+                const badge = s.low ? ` <span style="color:#dc2626; font-size:10px; font-weight:700;">⚠ LOW</span>` : "";
+                div.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(0,0,0,0.05);font-size:12.5px;";
+                div.innerHTML = `<div style="text-transform:capitalize; color:${color};">${s.name}${badge}</div>
                     <div style="display:flex; gap:10px; align-items:center;">
-                    <div style="width:90px;height:6px;background:rgba(0,0,0,0.06);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${s.week_pct}%;background:linear-gradient(90deg,#6366f1,#8b5cf6);"></div></div>
-                    <div>${s.week_pct}% / ${s.month_pct}%</div></div>`;
+                    <div style="width:90px;height:6px;background:rgba(0,0,0,0.06);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${s.week_pct}%;background:${s.low ? '#dc2626' : 'linear-gradient(90deg,#6366f1,#8b5cf6)'};"></div></div>
+                    <div style="color:${color};">${s.week_pct}% / ${s.month_pct}%</div></div>`;
                 pctList.appendChild(div);
             });
         }
@@ -326,7 +320,7 @@
 
         async function refreshData(isFilterChange = false) {
             try {
-                const res = await fetch(`/api/data?department=${encodeURIComponent(currentDept)}`);
+                const res = await fetch(`/api/data?department=${encodeURIComponent(currentDept)}&start_date=${encodeURIComponent(currentStart)}&end_date=${encodeURIComponent(currentEnd)}`);
                 const data = await res.json();
 
                 animateCount(document.getElementById("totalCount"), data.total_count);
